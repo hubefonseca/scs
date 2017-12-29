@@ -1,0 +1,138 @@
+<html><head><title>Sistemas Distribu&iacute;dos - 07.1</title>
+<link rev="made" href="mailto:noemi@inf.puc-rio.br">
+</head>
+<body>
+<h1>Trabalho 3 - Sistemas Distribuídos </h1>
+
+<h2>Data de entrega: 30/6</h2>
+
+<h2>Descrição</h2>
+
+<p>
+O trabalho consiste em 
+criar um protótipo de jogo MORPG (<i>Multiplayer Online Role Playing Game</i>), 
+estilo PVP (<i>Player Versus Player</i>), com arquitetura peer-to-peer, em <a href="http://www.lua.org">Lua</a>, utilizando a biblioteca
+<a href="http://alua.inf.puc-rio.br/dalua">DALua</a>. 
+<p>
+Cada jogador executará dois processos DALua (em terminais distintos do sistema) 
+para participar do jogo. Um deles será a interface gráfica (textual) e o outro 
+funcionará como o console do jogo, aguardando comandos do teclado. Estes 
+processos fazem parte do <em>daemon</em> ALua criado localmente na máquina para 
+aquele jogador.<p>
+Inicialmente o jogo encontra-se no estado desconectado. Sendo assim, o jogador 
+terá a opção de efetuar dois comandos:<ul>
+	<li><strong>start</strong> - Cria uma nova sessão de jogo.</li>
+	<li><strong>connect &lt;<em>IP</em>&gt; &lt;<em>PORTA</em>&gt;</strong> - Conecta-se a 
+	alguma sessão existente.</li>
+</ul>
+<p>O primeiro jogador deverá criar uma nova sessão, enquanto que os demais 
+jogadores se conectarão ao computador que iniciou a sessão ou a algum computador 
+já conectado.</p>
+<p>
+Em seguida, o jogador é apresentado às seguintes opções:<ul>
+	<li><strong>list</strong> - Lista os mundos de jogo já criados e o número de jogadores em cada um.</li>
+	<li><strong>create &lt;<em>NOME</em>&gt;</strong> - Cria um novo mundo de jogo com 
+	o nome dado.</li>
+	<li><strong>join &lt;<em>NOME</em>&gt;</strong> - Entra num mundo de jogo 
+	existente.</li>
+</ul>
+<p>Neste momento, os jogadores podem criar ou entrar em mundos de jogo. Um mundo 
+de jogo é um grupo isolado de jogadores. Cada jogador pode participar de apenas 
+um mundo num dado momento.</p>
+<p>Cada mundo de jogo possui um mapa onde os jogadores estão situados. O mapa é 
+um tabuleiro 2D composto por 50x50 posições possíveis. Cada jogador estará 
+localizado em alguma posição do mapa. Quando um mundo é criado, o mapa deve ser 
+carregado de um arquivo de texto onde cada caractere corresponde a uma posição. 
+Os seguintes caracteres são usados no arquivo:</p>
+<ul>
+	<li class="style1"><strong>L</strong> - Posição livre.</li>
+	<li class="style1"><strong>X</strong> - Obstáculo.</li>
+	<li class="style1"><strong>S </strong>- Posição de <em>spawn</em> (só existe 
+	um único por mapa).</li>
+	<li class="style1"><strong>P</strong> - Área de proteção.</li>
+</ul>
+<p>
+O arquivo <a href="mapa.txt"><code>mapa.txt</code></a> contém um exemplo de mapa. 
+Considere que todos os arquivos de mapa terão formato válido e existirão em 
+todos os computadores. No caso de mundos já criados, o jogador recebe o mapa com 
+seu estado atual diretamente de um jogador que já se encontrava no jogo.<p>
+Na interface gráfica é exibida a visão de cada jogador. Ela é topográfica, limitada a 
+11x9 posições do mapa, 
+com o personagem do jogador no centro, 
+ou seja, partindo do centro, é possível visualizar 5 posições para cada lado na 
+direção horizontal e 4 posições na vertical.
+
+<p>
+Quando um jogador entra no mundo, seu personagem é inserido na posição de <em>
+spawn</em> do mapa (ou na sua vizinhança imediata, caso já exista alguém naquela 
+posição). Cada personagem é identificado e exibido com números de 1 a 9 (o limite é de 9 jogadores 
+por mundo), 
+atribuídos automaticamente no momento em que o jogador cria ou entra no mundo de 
+jogo. Observe que esses identificadores são únicos dentro de um mundo, porém 
+independentes entre mundos diferentes.<p>
+Os obstáculos do mapa são indicados com &#39;X&#39;, enquanto que as bordas (área 
+anterior a [1,1] ou posterior a [50,50]) são preenchidas com &#39;#&#39;. Todo o 
+restante deve ser preenchido com espaço em branco.<p>
+Durante a execução do jogo, as ações disponíveis para cada jogador são:
+<ul>
+<li> <strong>move n|s|e|w</strong> - move o personagem uma posição para o norte, 
+sul, leste ou oeste.<li> <strong>attack n|s|e|w</strong> - ataca o personagem na 
+vizinhança imediata ao norte, sul, leste ou oeste.<li> <strong>say &lt;blabla&gt;</strong> 
+- diz alguma coisa (aparecerá na tela dos demais jogadores do mundo de jogo).<li> 
+<strong>leave</strong> - sai do mundo de jogo atual, retornando à tela anterior.</ul>
+
+<p>O objetivo do jogo é matar o maior número possível de jogadores enquanto 
+mantém-se vivo. Cada jogador tem uma pontuação, ou nível, que é incrementado 
+quando mata outro jogador, e decrementado quando é morto por alguém. Na tela de 
+cada jogador é exibido o identificador do que tiver a maior pontuação do momento 
+naquele mundo de jogo.</p>
+<p>Quando um jogador é morto, seu corpo é adicionado no local da morte, 
+representado pelo caractere &#39;&amp;&#39; (porém não é considerado um obstáculo). Então, 
+ele continua recebendo eventos do jogo, mas é incapaz de efetuar as ações
+<strong>move</strong> e <strong>attack</strong>. 
+Após 5 segundos, seu personagem é automaticamente reinserido na posição de <em>
+spawn</em> do mapa, e as ações são reativadas.</p>
+<p>Na interface, além do mapa são exibidas as 5 últimas mensagens enviadas/recebidas 
+do jogador. Elas podem conter também mensagens informativas, avisando que 
+jogadores entraram ou saíram, ou que alguém foi morto.</p>
+<p>Caso o jogador decida sair do 
+mundo de jogo, seu nível será zerado. Se ele for o único jogador no mundo, este 
+será destruído também, podendo ser recriado no futuro.</p>
+<p>Não é possível atacar jogadores que estejam na posição de <em>spawn</em> do 
+mapa ou numa área de proteção. Também não é possível mover-se para uma posição 
+com obstáculos, outros jogadores ou para além das bordas do mapa.</p>
+<p>Para simplificar, considere que os jogadores nunca fecharão os terminais de 
+jogo e seus respectivos processos (não existe uma opção &quot;disconnect&quot; ou 
+&quot;unlink&quot;).</p>
+
+<h3>
+Em termos de implementação: </h3>
+<ol>
+<li> O processo da interface gráfica cria um <em>daemon</em> ALua na máquina 
+local com <code>dalua.init</code>. O processo do console conecta-se ao mesmo <em>daemon</em> fazendo uma nova chamada a <code>dalua.init</code> com os mesmos parâmetros. 
+Então, os comandos digitados no console são enviados como mensagens para o 
+processo da interface.<li> Ao criar uma sessão, o processo deve criar também uma 
+aplicação DALua (<code>dalua.app</code>) global da qual participarão todos os jogadores conectados. Ela será 
+útil para obter a lista de mundos criados.<li> Para se conectar a 
+uma sessão existente, inicialize o DALua e então utilize <code>dalua.link</code> passando o endereço do computador que 
+tem a sessão.<li> Cada mundo de jogo corresponderá a uma aplicação DALua. Ao 
+criá-la, é útil criar também um objeto de exclusão mútua para a aplicação, que 
+será usado em algumas operações. Quando outros processos entrarem ou saírem da aplicação, 
+o Mutex também deverá ser atualizado (ver documentação do <code>dalua.mutex</code>).<li> 
+Analise bem os casos em que a exclusão mútua é necessária. Cada jogador mantém 
+uma cópia local do mapa, portanto qualquer alteração nele deve ser sincronizada 
+entre todos os processos. A liberação do Mutex só deve ser realizada quando 
+todos os processos confirmarem que a tarefa desejada foi completada.<li> 
+Para a reinserção cronometrada do jogador que foi morto, utilize o módulo 
+<code>dalua.timer</code>. Ele também pode ser utilizado para criar testes 
+automatizados, enviando comandos periodicamente à interface.<li> A 
+interface deve ser atualizada automaticamente sempre que algum evento ocorrer. 
+Utilize o comando <code>os.execute(&quot;clear&quot;)</code> para limpar a tela e 
+então redesenhe-a por 
+completo.<li> É possível fazer testes em apenas uma máquina, utilizando para 
+isso portas diferentes para cada jogador durante a inicialização do DALua.</ol>
+ 
+ 
+</body>
+</html>
+
